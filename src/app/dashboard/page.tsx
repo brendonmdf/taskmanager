@@ -7,6 +7,7 @@ import { Header } from '@/app/components/header'
 import { KanbanBoard } from '@/app/components/kanban-board'
 import { Button } from "@/components/ui/button"
 import { PlusCircle } from 'lucide-react'
+import { ReportingForm } from '@/app/components/reporting-form'
 import type { Task } from '@/app/types/kanban'
 
 export default function DashboardPage() {
@@ -30,6 +31,15 @@ export default function DashboardPage() {
     return () => window.removeEventListener('focus', refreshTickets);
   }, []);
 
+  const handleReportSubmit = (report: { title: string; description: string }) => {
+    // Here you would typically send this to your backend
+    console.log('Report submitted:', report)
+    // For now, we'll just store it in localStorage
+    const reports = JSON.parse(localStorage.getItem('reports') || '[]')
+    reports.push({ ...report, id: Date.now(), createdAt: new Date().toISOString() })
+    localStorage.setItem('reports', JSON.stringify(reports))
+  }
+
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
@@ -38,9 +48,12 @@ export default function DashboardPage() {
         <main className="flex-1 overflow-auto p-4">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold">Dashboard</h1>
-            <Button onClick={() => router.push('/create-ticket')}>
-              <PlusCircle className="mr-2 h-4 w-4" /> Create Ticket
-            </Button>
+            <div className="space-x-2">
+              <Button onClick={() => router.push('/create-ticket')}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Create Ticket
+              </Button>
+              <ReportingForm onSubmit={handleReportSubmit} />
+            </div>
           </div>
           <KanbanBoard initialTickets={newTickets} />
         </main>
@@ -48,3 +61,4 @@ export default function DashboardPage() {
     </div>
   )
 }
+

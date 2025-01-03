@@ -5,7 +5,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { MessageSquare, Paperclip, ChevronRight } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { MessageSquare, Paperclip, ChevronRight, Clock, Tag } from 'lucide-react'
 import type { Task, Comment } from '@/app/types/kanban'
 import { columnOrder } from '@/app/types/kanban'
 
@@ -20,9 +22,11 @@ export function TaskModal({ task, isOpen, onClose, onUpdate }: TaskModalProps) {
   const [localTask, setLocalTask] = useState<Task | null>(task)
   const [newComment, setNewComment] = useState('')
   const [newAttachment, setNewAttachment] = useState<File | null>(null)
+  const [selectedPhase, setSelectedPhase] = useState<Task['status'] | ''>('')
 
   useEffect(() => {
     setLocalTask(task)
+    setSelectedPhase('')
   }, [task])
 
   if (!localTask) return null
@@ -50,10 +54,9 @@ export function TaskModal({ task, isOpen, onClose, onUpdate }: TaskModalProps) {
   }
 
   const handleMoveToNextPhase = () => {
-    const currentIndex = columnOrder.indexOf(localTask.status)
-    if (currentIndex < columnOrder.length - 1) {
-      const nextStatus = columnOrder[currentIndex + 1]
-      setLocalTask(prev => prev ? {...prev, status: nextStatus as Task['status']} : null)
+    if (selectedPhase && localTask) {
+      setLocalTask(prev => prev ? {...prev, status: selectedPhase} : null)
+      setSelectedPhase('')
     }
   }
 
@@ -66,67 +69,114 @@ export function TaskModal({ task, isOpen, onClose, onUpdate }: TaskModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
-          <DialogTitle>{localTask.title}</DialogTitle>
+          <DialogTitle className="text-2xl font-bold">{localTask.title}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <p>{localTask.description}</p>
-          <div>
-            <h4 className="mb-2 font-semibold">Assignees</h4>
-            <div className="flex space-x-2">
-              {localTask.assignees.map((assignee, index) => (
-                <Avatar key={index}>
-                  <AvatarImage src={`/placeholder.svg?height=32&width=32`} />
-                  <AvatarFallback>{assignee[0].toUpperCase()}</AvatarFallback>
-                </Avatar>
-              ))}
-            </div>
+          <div className="flex items-center space-x-2 text-sm text-gray-500">
+            <Clock className="w-4 h-4" />
+            <span>Created on {new Date().toLocaleDateString()}</span>
+            <Tag className="w-4 h-4 ml-4" />
+            <span>{localTask.status}</span>
           </div>
-          <div>
-            <h4 className="mb-2 font-semibold">Comments</h4>
-            {localTask.comments.map((comment) => (
-              <div key={comment.id} className="mb-2">
-                <p className="text-sm font-semibold">{comment.author}</p>
-                <p className="text-sm">{comment.content}</p>
+          <Tabs defaultValue="details" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="comments">Comments</TabsTrigger>
+              <TabsTrigger value="attachments">Attachments</TabsTrigger>
+            </TabsList>
+            <TabsContent value="details">
+              <div className="space-y-4 mt-4">
+                <div>
+                  <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={localTask.description}
+                    onChange={(e) => setLocalTask(prev => prev ? {...prev, description: e.target.value} : null)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Assignees</Label>
+                  <div className="flex space-x-2 mt-1">
+                    {localTask.assignees.map((assignee, index) => (
+                      <Avatar key={index}>
+                        <AvatarImage src={`/placeholder.svg?height=32&width=32`} />
+                        <AvatarFallback>{assignee[0].toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                    ))}
+                  </div>
+                </div>
               </div>
-            ))}
-            <form onSubmit={handleCommentSubmit} className="mt-2">
-              <Textarea
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Add a comment..."
-                className="mb-2"
-              />
-              <Button type="submit" size="sm">Add Comment</Button>
-            </form>
-          </div>
-          <div>
-            <h4 className="mb-2 font-semibold">Attachments</h4>
-            {localTask.attachments.map((attachment, index) => (
-              <div key={index} className="mb-2">
-                <a href={attachment} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                  Attachment {index + 1}
-                </a>
+            </TabsContent>
+            <TabsContent value="comments">
+              <div className="space-y-4 mt-4">
+                {localTask.comments.map((comment) => (
+                  <div key={comment.id} className="bg-gray-50 p-3 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <Avatar>
+                        <AvatarImage src={`/placeholder.svg?height=32&width=32`} />
+                        <AvatarFallback>{comment.author[0].toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-semibold">{comment.author}</p>
+                        <p className="text-xs text-gray-500">{new Date(comment.createdAt).toLocaleString()}</p>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-sm">{comment.content}</p>
+                  </div>
+                ))}
+                <form onSubmit={handleCommentSubmit} className="mt-4">
+                  <Textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Add a comment..."
+                    className="mb-2"
+                  />
+                  <Button type="submit" size="sm">Add Comment</Button>
+                </form>
               </div>
-            ))}
-            <Label htmlFor="attachment" className="cursor-pointer">
-              <Input
-                id="attachment"
-                type="file"
-                className="hidden"
-                onChange={handleAttachmentUpload}
-              />
-              <div className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-800">
-                <Paperclip className="w-4 h-4" />
-                <span>Attach a file</span>
+            </TabsContent>
+            <TabsContent value="attachments">
+              <div className="space-y-4 mt-4">
+                {localTask.attachments.map((attachment, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <Paperclip className="w-4 h-4" />
+                    <a href={attachment} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                      Attachment {index + 1}
+                    </a>
+                  </div>
+                ))}
+                <Label htmlFor="attachment" className="cursor-pointer inline-flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-800">
+                  <Input
+                    id="attachment"
+                    type="file"
+                    className="hidden"
+                    onChange={handleAttachmentUpload}
+                  />
+                  <Paperclip className="w-4 h-4" />
+                  <span>Attach a file</span>
+                </Label>
               </div>
-            </Label>
-          </div>
+            </TabsContent>
+          </Tabs>
         </div>
-        <div className="flex justify-between">
-          <Button onClick={handleMoveToNextPhase} disabled={localTask.status === 'done'}>
-            Move to Next Phase <ChevronRight className="ml-2 h-4 w-4" />
+        <div className="flex justify-between items-center mt-6">
+          <Select value={selectedPhase} onValueChange={setSelectedPhase}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select next phase" />
+            </SelectTrigger>
+            <SelectContent>
+              {columnOrder.map((phase) => (
+                <SelectItem key={phase} value={phase}>
+                  {phase.charAt(0).toUpperCase() + phase.slice(1)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button onClick={handleMoveToNextPhase} disabled={!selectedPhase}>
+            Move to Selected Phase <ChevronRight className="ml-2 h-4 w-4" />
           </Button>
           <Button onClick={handleSave}>Save Changes</Button>
         </div>

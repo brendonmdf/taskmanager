@@ -13,7 +13,7 @@ export function Header() {
         <nav>
           <ul className="flex items-center space-x-4">
             <li>
-              <Link href="/dashboard" className="text-sm font-medium">Task Manager.</Link>
+              <Link href="/dashboard" className="text-sm font-medium">Dashboard</Link>
             </li>
             <li>
               <Link href="/my-tasks" className="text-sm font-medium">My Tasks</Link>
