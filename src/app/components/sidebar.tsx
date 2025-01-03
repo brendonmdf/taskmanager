@@ -1,13 +1,14 @@
 import Link from 'next/link'
-import { Inbox, FileText, BarChart2, ShoppingCart, Bitcoin, FolderClosed, Settings } from 'lucide-react'
+import { FileText, ShoppingCart, FolderClosed, Settings, Code, MessageSquare } from 'lucide-react'
 
 const sidebarItems = [
-  { icon: Inbox, label: 'Inbox', count: 4 },
-  { icon: FileText, label: 'Drive Files', count: 435 },
-  { icon: FolderClosed, label: 'Boards', count: 5 },
-  { icon: BarChart2, label: 'Relatórios', count: 2 },
-  { icon: ShoppingCart, label: 'Pedidos', count: 0 },
-  { icon: Settings, label: 'Settings', count: 2 },
+  { icon: MessageSquare, label: 'Messaging', count: 0, href: '/messaging' },
+  { icon: FileText, label: 'Drive Files', count: 0, href: '/drive-files' },
+  { icon: FolderClosed, label: 'Boards', count: 5, href: '/dashboard' },
+  { icon: ShoppingCart, label: 'Pedidos', count: 0, href: '/dashboard' },
+  { icon: Settings, label: 'Settings', count: 2, href: '/dashboard' },
+  { icon: Code, label: 'Developer', count: 0, href: '/developer' },
+  
 ]
 
 export function Sidebar() {
@@ -20,7 +21,7 @@ export function Sidebar() {
         <ul className="p-2 space-y-2">
           {sidebarItems.map((item, index) => (
             <li key={index}>
-              <Link href="#" className="flex items-center p-2 rounded-lg hover:bg-gray-100">
+              <Link href={item.href} className="flex items-center p-2 rounded-lg hover:bg-gray-100">
                 <item.icon className="w-5 h-5 mr-3 text-gray-500" />
                 <span className="flex-1">{item.label}</span>
                 {item.count > 0 && (
